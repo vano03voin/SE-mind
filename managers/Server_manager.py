@@ -1,0 +1,72 @@
+import asyncio
+import psutil
+import os
+from pprint import pprint
+from datetime import datetime
+
+
+class Server:
+    """класс для создания обьекта сервера"""
+    exePath = 'Torch.Server.exe'
+    instancePath = 'Instance/'
+    savePath = 'Saves/'
+    backupsPath = 'Backup/'
+
+    def __init__(self, r_path, settings):
+        self.root_path = self.fix_path(r_path)  # .split(self.instancePath)[0]
+        self.settings = settings
+
+    async def turn_on(self, safe=False):
+        if not self.is_working():
+            os.popen(self.root_path + self.exePath)
+        if safe:
+            while not self.is_b5_exist():
+                await asyncio.sleep(20)
+            await asyncio.sleep(10)
+            self.turn_off()
+            await asyncio.sleep(10)
+            os.popen(self.root_path + self.exePath)
+
+    def turn_off(self):
+        if pid := self.is_working():
+            psutil.Process(pid).kill()
+
+    def get_save_path(self, backups=False):
+        path = self.root_path+self.instancePath+self.savePath
+        files = [f.name for f in os.scandir(path) if f.is_dir()]
+        world_path = files[0]
+        for file in files:
+            if os.path.getmtime(path + file) > os.path.getmtime(path + world_path):
+                world_path = file
+        return path + world_path + '/' + ('Backup/' if backups else '')
+
+    def get_backup_path_list(self):
+        path = self.get_save_path(backups=True)
+        return [(path+f.name+'/') for f in os.scandir(path) if f.is_dir()]
+
+    def is_working(self):
+        path = self.fix_path(self.root_path)
+        for proc in psutil.process_iter():
+            try:
+                if path in proc.exe().replace('\\', '/'):
+                    return proc.pid
+            except psutil.AccessDenied:
+                pass
+        return False
+
+    def is_b5_exist(self):
+        path = self.get_save_path() + 'SANDBOX_0_0_0_.sbsB5'
+        if os.path.exists(path) and int(os.path.getsize(path)) > 10:
+            return True
+        return False
+
+    @classmethod
+    def fix_path(cls, path_to_fix):
+        path_to_fix.replace('\\', '/')
+        path_to_fix.replace('//', '/')
+        return path_to_fix if path_to_fix[-1] == '/' else path_to_fix + '/'
+
+
+if __name__ == "__main__":
+    server = Server('C:\\Users\\lena0\\OneDrive\\Рабочий стол\\test_server', [])
+    pprint(server.get_backup_path_list())
