@@ -8,11 +8,11 @@ OBSERVED = {  # support multiplie servers
         'restart_pram': {  # when and what program have to do restart
             2: [  # key is the hour in 24 day when restart should happen
                 'fix_world',  # commands for world_manager what he have to do.
-                'check_security',  # check what they do in managers/world_manager in class WorldManager
-                'fix_world'
+                'check_security'  # check what they do in managers/world_manager in class WorldManager
             ],
             10: [
-                'fix_world'
+                'fix_world',
+                'check_security'
             ]
         },
         'discord': {  # links to chanels with SE_bridge. (IMPORTANT)

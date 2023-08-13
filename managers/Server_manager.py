@@ -13,23 +13,20 @@ class Server:
     backupsPath = 'Backup/'
 
     def __init__(self, r_path, settings):
-        self.root_path = self.fix_path(r_path)  # .split(self.instancePath)[0]
+        print(f'start monitoring server {r_path}')
+        self.root_path = self.fix_path(r_path)
         self.settings = settings
+        self.work_status = True
 
-    async def turn_on(self, safe=False):
+    def turn_on(self):
         if not self.is_working():
             os.popen(self.root_path + self.exePath)
-        if safe:
-            while not self.is_b5_exist():
-                await asyncio.sleep(20)
-            await asyncio.sleep(10)
-            self.turn_off()
-            await asyncio.sleep(10)
-            os.popen(self.root_path + self.exePath)
+            self.work_status = True
 
     def turn_off(self):
         if pid := self.is_working():
             psutil.Process(pid).kill()
+            self.work_status = False
 
     def get_save_path(self, backups=False):
         path = self.root_path+self.instancePath+self.savePath

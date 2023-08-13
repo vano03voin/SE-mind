@@ -1,13 +1,12 @@
 import asyncio
 import discord
-import os
-
-# from discord.ext.commands import Bot
-from discord.ext import tasks, commands
-# from discord.utils import get
 import datetime
+import os
+import threading
 
-from managers import Server_manager, Restart_manager
+from discord.ext import tasks, commands
+
+from managers import Server_manager, Restart_manager, Window_manager
 import settings
 
 SERVERS = []
@@ -24,6 +23,8 @@ for server_data in settings.OBSERVED.keys():
 @bot.event
 async def on_ready():
     restart_loop.start()
+    mail_check_loop.start()
+    is_server_work_loop.start()
 
 
 @bot.event
@@ -33,59 +34,50 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(ctx):
-    # print(ctx.content)
-    pass
+    print(ctx.content)
+    #pass
 
 
-def get_restart_times():
+def get_restart_times(test=False):
     restart_times = []
     for server in SERVERS:
         if server.settings['do_restarts']:
             for restart_hour in server.settings['restart_pram'].keys():
                 restart_times.append(datetime.time(hour=restart_hour, tzinfo=tz))
+    if test:
+        restart_times = [datetime.time(hour=int(datetime.datetime.now().hour),
+                                       minute=int(datetime.datetime.now().minute) + 1,
+                                       second=0, tzinfo=tz)]
+        SERVERS[0].settings['restart_pram'][int(datetime.datetime.now().hour)] = ['fix_world', 'check_security']
     return restart_times
 
 
-restart_time = get_restart_times()
-
-
-#restart_time = [datetime.time(hour=20, minute=10, second=0, tzinfo=tz)]
-# @tasks.loop(hours = 6)
-
-
-@tasks.loop(time=restart_time)
+@tasks.loop(time=get_restart_times(False))
 async def restart_loop():
     for server in SERVERS:
         if server.settings['do_restarts']:
             for restart_hour in server.settings['restart_pram'].keys():
                 if restart_hour == int(datetime.datetime.now().hour):
-                    await restart(server, restart_hour)
+                    restart_manager = Restart_manager.RestartManager(server, MAIL_STORAGE)
+                    await restart_manager.do_restart(restart_hour)
+                    del restart_manager
 
 
-async def restart(server, restar_hour):
-    restart_manager = Restart_manager.RestartManager(server)
-    delay = await restart_manager.delay_before_restart()
-    for i in range(5):
-        await msg_to_chanel([server.settings['discord']['sebd']],
-                            [f'!say  \n ! \n RESTART IN {delay // 60} MIN {delay % 60} SEK \n ! ',
-                             f'!notify " RESTART IN {delay // 60} MIN {delay % 60} SEK " 5000 Red'])
-        delay = delay // 2 + 1
-        await asyncio.sleep(delay)
-    await asyncio.sleep(delay)
+@tasks.loop(seconds=1)
+async def mail_check_loop():
+    while MAIL_STORAGE:
+        message = MAIL_STORAGE.pop(0)
+        await msg_to_chanel(message[0], message[1])
 
-    if server.settings['do_server_use_depatch_savefix']:
-        await msg_to_chanel([server.settings['discord']['ingame_chat']],
-                            ['Say admin that restart dont work with depatch'])
-    else:
-        await msg_to_chanel([server.settings['discord']['sebd']], ['!stop'])
-        await asyncio.sleep(restart_manager.SAFE_SAVING_TIME)
-    server.turn_off()
-    try:
-        restart_manager.world_manager.execute_commands(server.settings['restart_pram'][restar_hour])
-    except:
-        print('it often happends when SANDBOX_0_0_0.sbs dont exist')
-        raise
-    await server.turn_on(safe=True)
+
+@tasks.loop(minutes=2, seconds=0)
+async def is_server_work_loop():
+    for server in SERVERS:
+        if server.work_status and not server.is_working():
+            if server.work_status != 'boot':
+                server.work_status = 'boot'
+                ui = Window_manager.Window(server)
+                asyncio.ensure_future(ui.ui())
 
 
 async def msg_to_chanel(where, what, delay=0):
