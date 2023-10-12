@@ -12,7 +12,12 @@ class Server:
     savePath = 'Saves/'
     backupsPath = 'Backup/'
 
-    def __init__(self, r_path, settings):
+    available_restart_prams = (
+        'fix_world',
+        'check_security'
+    )
+
+    def __init__(self, r_path: str, settings):
         print(f'start monitoring server {r_path}')
         self.root_path = self.fix_path(r_path)
         self.settings = settings
@@ -56,6 +61,13 @@ class Server:
         if os.path.exists(path) and int(os.path.getsize(path)) > 10:
             return True
         return False
+
+    def __eq__(self, other):
+        if type(other) == Server:
+            return self.root_path == other.root_path
+
+    def __hash__(self):
+        return hash(self.root_path)
 
     @classmethod
     def fix_path(cls, path_to_fix):

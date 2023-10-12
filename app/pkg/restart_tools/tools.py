@@ -1,50 +1,48 @@
 import asyncio
 import time
 import os
-from managers import World_manager
-from managers import Server_manager
+
+from app.pkg.world_tools.tools import WorldManager
+from app.pkg.server_tools.tools import Server
 
 
 class RestartManager:
     SAFE_SAVING_TIME = 60  # my world is 1k grids count
 
-    def __init__(self, server, mail_storage):
-        self.mail_storage = mail_storage
+    def __init__(self, server: Server, send_sms):
+        self.send_sms = send_sms
         self.server = server
-        self.world_manager = World_manager.WorldManager(server.get_save_path(), rw='w')
-
-    def test_mail(self):
-        self.mail_storage.append({'where': 223, 'what': 'gg'})
+        self.world_manager = WorldManager(server.get_save_path(), rw='w')
 
     def delay_before_restart(self):
-        if self.server.settings['do_server_use_depatch_savefix']:
+        if self.server.settings['is_depatch_saving']:
             raise AttributeError('Program not support restart with depatch yet')
-        return int(self.server.settings['restart_delay'])
+        return int(self.server.settings['delay_before_restart'])
 
-    async def do_restart(self, restart_hour):
+    async def do_restart(self):
         delay = self.delay_before_restart()
         for i in range(5):
-            self.mail_storage.append([
-                [self.server.settings['discord']['sebd']],
+            await self.send_sms([
+                [self.server.settings['ingame_chat_id']],
                 [f'!say  \n ! \n RESTART IN {delay // 60} MIN {delay % 60} SEK \n ! ',
                  f'!notify " RESTART IN {delay // 60} MIN {delay % 60} SEK " 5000 Red']])
             delay = delay // 2 + 1
             await asyncio.sleep(delay)
         await asyncio.sleep(delay)
 
-        if self.server.settings['do_server_use_depatch_savefix']:
-            self.mail_storage.append([[self.server.settings['discord']['ingame_chat']],
-                                      ['Say admin that restart dont work with depatch']])
+        if self.server.settings['is_depatch_saving']:
+            await self.send_sms([[self.server.settings['ingame_chat_id']],
+                                 ['Say admin that restart dont work with depatch']])
         else:
-            self.mail_storage.append([[self.server.settings['discord']['sebd']], ['!stop']])
+            await self.send_sms([[self.server.settings['commands_chat_id']], ['!stop']])
             await asyncio.sleep(self.SAFE_SAVING_TIME)
         self.server.turn_off()
         try:
-            self.world_manager.execute_commands(self.server.settings['restart_pram'][restart_hour])
+            self.world_manager.execute_commands(
+                [self.server.settings[pram] for pram in self.server.available_restart_prams if self.server.settings[pram] != ''])
             del self.world_manager
         except:
             print('it often happends when SANDBOX_0_0_0.sbs dont exist')
-            raise
 
         self.server.turn_on()
         while not self.server.is_b5_exist():

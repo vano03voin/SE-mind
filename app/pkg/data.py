@@ -1,4 +1,55 @@
-block_types = {'MyObjectBuilder_AirVent',  # 90 шт.
+import xml.etree.ElementTree as ET
+
+
+class EntityBuilder:
+    @classmethod
+    def create_from_xml(cls, xml_parent: ET.Element, xml_sourse: ET.Element):
+        match e_type:
+            case 'MyObjectBuilder_Character':
+                pass
+            case 'MyObjectBuilder_CubeGrid':
+                pass
+            case 'MyObjectBuilder_FloatingObject':
+                pass
+            case 'MyObjectBuilder_Planet':
+                pass
+            case 'MyObjectBuilder_SafeZone':
+                pass
+            case 'MyObjectBuilder_VoxelMap':
+                pass
+            case 'MyObjectBuilder_InventoryBagEntity':
+                pass
+            case _:
+                print(f'for entity {e_type} life dont prepare me')
+
+
+block_invnt = ['MyObjectBuilder_Assembler',  # 24
+               'MyObjectBuilder_CargoContainer',
+               'MyObjectBuilder_Cockpit',
+               'MyObjectBuilder_Collector',
+               'MyObjectBuilder_ConveyorSorter',
+               'MyObjectBuilder_CryoChamber',
+               'MyObjectBuilder_CubeBlock',
+               'MyObjectBuilder_Drill',
+               'MyObjectBuilder_InteriorTurret',
+               'MyObjectBuilder_LargeGatlingTurret',
+               'MyObjectBuilder_LargeMissileTurret',
+               'MyObjectBuilder_OxygenGenerator',
+               'MyObjectBuilder_OxygenTank',
+               'MyObjectBuilder_Parachute',
+               'MyObjectBuilder_Reactor',
+               'MyObjectBuilder_Refinery',
+               'MyObjectBuilder_SafeZoneBlock',
+               'MyObjectBuilder_ShipConnector',
+               'MyObjectBuilder_ShipGrinder',
+               'MyObjectBuilder_ShipWelder',
+               'MyObjectBuilder_SmallGatlingGun',
+               'MyObjectBuilder_SmallMissileLauncher',
+               'MyObjectBuilder_SmallMissileLauncherReload',
+               'MyObjectBuilder_StoreBlock',
+               'MyObjectBuilder_SurvivalKit']
+
+block_types = ['MyObjectBuilder_AirVent',  # 90 шт.
                'MyObjectBuilder_AirtightHangarDoor',
                'MyObjectBuilder_AirtightSlideDoor',
                'MyObjectBuilder_Assembler',
@@ -87,4 +138,4 @@ block_types = {'MyObjectBuilder_AirVent',  # 90 шт.
                'MyObjectBuilder_VendingMachine',
                'MyObjectBuilder_Warhead',
                'MyObjectBuilder_Wheel',
-               'MyObjectBuilder_WindTurbine'}
+               'MyObjectBuilder_WindTurbine']

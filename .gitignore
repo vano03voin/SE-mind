@@ -1,5 +1,7 @@
 # created by virtualenv automatically
-settings.py
+Log.txt
 test_managers.py
 __pycache__
 .idea
+servers.ini
+main_settings.ini

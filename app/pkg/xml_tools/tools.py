@@ -1,26 +1,5 @@
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 import os
-
-
-class XmlNanure:
-    """Methods for xml family obj's"""
-
-    @staticmethod
-    def to_log(where, what):
-        with open(where, 'a', encoding="utf-8", newline='') as f:
-            print(what)
-            f.write(what)
-
-    @staticmethod
-    def get_xsi(element):
-        return element.get('{http://www.w3.org/2001/XMLSchema-instance}type')
-
-    @staticmethod
-    def get_text(element):
-        try:
-            return element.text
-        except AttributeError:
-            return None
 
 
 class ElementTree:
@@ -29,6 +8,7 @@ class ElementTree:
     def __init__(self, file_path):
         self.path = file_path
         self.tree = ET.parse(self.path)
+        self.create_time = os.path.getctime(file_path)
 
     def save_tree(self):
         if len(self.path.split('.')) != 2:
@@ -51,4 +31,3 @@ class ElementTree:
             os.remove(file_path)
         except:
             pass
-
