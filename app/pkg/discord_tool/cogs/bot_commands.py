@@ -31,6 +31,17 @@ class Text(commands.Cog):
                 break
         await ctx.send('U dont chose this chanel on any server...')
 
+    @commands.check_any(has_guild_permissions(administrator=True), has_role('Hard Support'))
+    @commands.command()
+    async def test_restart(self, ctx):
+        for server in self.bot.servers:
+            if server.settings['commands_chat_id'] == str(ctx.channel.id):
+                restart_manager = RestartManager(server, send_sms=self.bot.msg_to_chanel)
+                await restart_manager.do_restart()
+                del restart_manager
+                break
+        await ctx.send('U dont chose this chanel on any server...')
+
 
 async def setup(bot):
     await bot.add_cog(Text(bot))

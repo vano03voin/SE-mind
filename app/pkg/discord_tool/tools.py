@@ -18,7 +18,7 @@ class SEDiscordBot(commands.Bot):
     tz = datetime.timezone(datetime.timedelta(hours=utc_offset), name='Lockal Time')
 
     def __init__(self, servers: Set[Server]):
-        super().__init__(command_prefix="!", intents=discord.Intents.all())
+        super().__init__(command_prefix="$", intents=discord.Intents.all())
         discord.utils.setup_logging()
         self.servers = servers
         self.mail_box = []
@@ -29,12 +29,6 @@ class SEDiscordBot(commands.Bot):
         # loops
         asyncio.create_task(self.restart_loop())
         asyncio.create_task(self.is_server_work_loop())
-
-        @self.command()
-        async def test_restart(ctx):
-            restart_manager = RestartManager(server, send_sms=self.msg_to_chanel)
-            await restart_manager.do_restart()
-            del restart_manager
 
         await self.start(tocken, reconnect=True)
 
@@ -70,9 +64,8 @@ class SEDiscordBot(commands.Bot):
                                 del restart_manager
             await asyncio.sleep(10*60)
 
-    async def msg_to_chanel(self, where, what, delay=0):
+    async def msg_to_chanel(self, where: str, what: list, delay=0):
         await asyncio.sleep(delay)
-        for i in where:
-            my_channel = self.get_channel(i)
-            for b in what:
-                await my_channel.send(b[:1990])
+        my_channel = self.get_channel(int(where))
+        for msg in what:
+            await my_channel.send(msg[:1995])
