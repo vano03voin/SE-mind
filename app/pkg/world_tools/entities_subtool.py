@@ -12,7 +12,7 @@ class XYZ:
         return str(f'GPS:{gps_name}:{self.x}:{self.y}:{self.z}:')
 
     def get_like_list(self):
-        return [self.x, self.y, self.z]
+        return {'x': self.x, 'y': self.y, 'z': self.z}
 
 
 class IAmXML:
@@ -61,13 +61,13 @@ class Entity(IAmXML):
 
     def get_name(self):
         if (e_name := self.xml_source.find('DisplayName')) is not None:
-            return e_name.text
+            return str(e_name.text)
         if (e_name := self.xml_source.find('CustomName')) is not None:
-            return e_name.text
+            return str(e_name.text)
         if (e_name := self.xml_source.find('Name')) is not None:
-            return e_name.text
+            return str(e_name.text)
         if (e_name := self.xml_source.find('EntityId')) is not None:
-            return e_name.text
+            return str(e_name.text)
 
 
 class CubeBlock(Entity):
@@ -114,6 +114,7 @@ class CubeGrid(Entity):
     def get_static(self):
         if (g_static := self.xml_source.find('IsStatic')) is not None:
             return True if g_static.text == 'true' else False
+        return False
 
     def get_killable(self):
         return True if self.xml_source.find('DestructibleBlocks').text else False
@@ -237,7 +238,7 @@ class SafeZone(Entity):
             'name': self.get_name(),
             'shape': self.get_shape(),
             'size': self.get_size(),
-            'is_enabled': self.get_is_enabled()
+            'enabled': self.get_is_enabled()
         }
         return zone_dict
 
@@ -288,7 +289,7 @@ class Character(Entity):
 class FloatingObject(Entity):
     def get_inventory(self):
         items = {}
-        return InventoryItem.merge_inv(items, InventoryItem.get_name_amount(self.xml_source.find('Item')))
+        return InventoryItem.get_name_amount(self.xml_source.find('Item'))
 
     def to_json(self):
         float_dict = {
@@ -339,7 +340,7 @@ class InventoryBagEntity(Entity):
             'id': self.get_id(),
             'gps': self.get_xyz().get_like_list(),
             'name': self.get_name(),
-            'owner': self.get_owner(),
+            'owner_id': self.get_owner(),
             'inventory': self.get_inventory()
         }
         return bag_dict

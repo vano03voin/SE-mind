@@ -1,8 +1,10 @@
 import asyncio
 import psutil
 import os
+from typing import List
 from pprint import pprint
 from datetime import datetime
+from app.pkg.xml_tools.tools import ElementTree
 
 
 class Server:
@@ -20,6 +22,12 @@ class Server:
     def __init__(self, r_path: str, settings):
         print(f'start monitoring server {r_path}')
         self.root_path = self.fix_path(r_path)
+        #get world id
+        world_file = ElementTree(self.get_save_path() + 'Sandbox.sbc')
+        sector = world_file.tree.getroot()
+        self.world_id = sector.find('WorldId').text
+        del world_file
+
         self.settings = settings
         self.work_status = True
 
@@ -33,7 +41,7 @@ class Server:
             psutil.Process(pid).kill()
             self.work_status = False
 
-    def get_save_path(self, backups=False):
+    def get_save_path(self, backups=False) -> str:
         path = self.root_path+self.instancePath+self.savePath
         files = [f.name for f in os.scandir(path) if f.is_dir()]
         world_path = files[0]
@@ -42,7 +50,7 @@ class Server:
                 world_path = file
         return path + world_path + '/' + ('Backup/' if backups else '')
 
-    def get_backup_path_list(self):
+    def get_backup_path_list(self) -> List[str]:
         path = self.get_save_path(backups=True)
         return [(path+f.name+'/') for f in os.scandir(path) if f.is_dir()]
 

@@ -8,7 +8,7 @@ class GPS:
 
     def to_json(self):
         gps_dict = {
-            'name': self.name,
+            'name': str(self.name),
             'coordinates': self.coordinates.get_like_list()
         }
         return gps_dict
@@ -91,7 +91,10 @@ class Player:
         for session_comp in self.xml_sector.find('SessionComponents'):
             if session_comp.get('{http://www.w3.org/2001/XMLSchema-instance}type') == 'MyObjectBuilder_BankingSystem':
                 account = session_comp.find(f'Accounts/MyObjectBuilder_AccountEntry[OwnerIdentifier="{self.get_id()}"]')
-                return account.find('Account/Balance').text
+                try:
+                    return account.find('Account/Balance').text
+                except AttributeError:
+                    return '0'
 
     def to_json(self):
         player_dict = {
@@ -102,7 +105,7 @@ class Player:
             'admin': self.get_is_admin(),
             'wildlife': self.get_is_wildlife(),
             'balance': self.get_balance(),
-            "gps's": [gps.to_json() for gps in self.get_gps()]
+            'gps_list': [gps.to_json() for gps in self.get_gps()]
         }
         return player_dict
 
@@ -137,6 +140,16 @@ class Faction:
     @classmethod
     def get_factions(cls, xml_sector):
         return [Faction(xml_sector, f) for f in xml_sector.find('Factions/Factions')]
+
+    @classmethod
+    def get_factions_stations_gps(cls, xml_sector):
+        station_gps = []
+        for faction in [Faction(xml_sector, f) for f in xml_sector.find('Factions/Factions')]:
+            for station in faction.xml_source.find('Stations'):
+                tmp = list(station.find("Position").attrib.items())
+                x, y, z = float(tmp[0][1]), float(tmp[1][1]), float(tmp[2][1])
+                station_gps.append(XYZ(int(x), int(y), int(z)).get_gps_mark(faction.get_tag()))
+        return station_gps
 
     def get_id(self):
         return self.xml_source.find('FactionId').text

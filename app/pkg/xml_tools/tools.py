@@ -12,7 +12,9 @@ class ElementTree:
 
     def save_tree(self):
         xsi = "http://www.w3.org/2001/XMLSchema-instance"
-        self.tree.getroot().attrib[f'{{{xsi}}}:xsd'] = "http://www.w3.org/2001/XMLSchema"
+        xmlns = "http://www.w3.org/2000/xmlns"
+        #self.tree.getroot().attrib[f'{{{xmlns}}}:xsd'] = "http://www.w3.org/2001/XMLSchema"
+        self.tree.getroot().attrib[f'xmlns:xsd'] = "http://www.w3.org/2001/XMLSchema"
         if len(self.path.split('.')) != 2:
             raise ValueError(f'path to file {self.path} and file have to had 1 "."')
         rel_name = self.path

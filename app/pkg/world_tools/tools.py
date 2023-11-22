@@ -2,16 +2,16 @@ import sys
 import xml.etree.ElementTree as ET
 from pprint import pprint
 
+import datetime
 import json
 import pickle
 import time
 import zlib
+import gzip
 
 from app.pkg.xml_tools.tools import ElementTree
-#from app.pkg.world_tools.entity_factory import EntityBuilder
 from app.pkg.world_tools.entities_subtool import *
 from app.pkg.world_tools.players_subtool import *
-#from app.iternal.models.world_entities_models import *
 
 
 class WorldManager:
@@ -51,6 +51,12 @@ class WorldManager:
                     self.check_security()
                 case 'test_manager_command':
                     self.test_manager_command()
+                case 'send_dump_to_server':
+                    self.send_dump_to_server()
+                case 'get_faction_resourses':
+                    self.get_faction_resourses()
+                case 'get_factions_stations_gps':
+                    pprint(Faction.get_factions_stations_gps(self.sandbox.sector))
                 case 'dump_data':
                     self.dump_data()
                 case _:
@@ -111,21 +117,35 @@ class WorldManager:
 
     def get_faction_resourses(self):
         members = []
+        factions_balance = {}
         for faction in Faction.get_factions(self.sandbox.sector):
-            if faction.get_tag() == 'OIS':
-                members = [memb.get_id() for memb in faction.get_members()]
-        faction_balance = {}
+            factions_balance[faction] = {}
+            #if faction.get_tag() == 'OIS':
+            #    members = [memb.get_id() for memb in faction.get_members()]
+
         for grid in self.SANDBOX.get_grids():
             for p_id, p_inv in grid.get_inventory_and_owners().items():
-                if p_id in members:
-                    InventoryItem.merge_inv(faction_balance, p_inv)
+                for tag, inv in factions_balance.items():
+                    if p_id in [member.get_id() for member in tag.get_members()]:
+                        #if p_id in members:
+                        InventoryItem.merge_inv(inv, p_inv)
         #pprint(faction_balance)
-        g = {}
-        for name, value in faction_balance.items():
-            if 'MyObjectBuilder_Ingot' in name:
-                g[name] = value
-        self.get_best_pl(g)
-        return faction_balance
+        self.faction_balance = {fac.get_tag(): it for fac, it in factions_balance.items()}
+
+        maxim = [0, 0]
+        for fac, inv in self.faction_balance.items():
+            if inv.get('MyObjectBuilder_Component EngineerPlushie', 0) > maxim[0]:
+                maxim=[inv['MyObjectBuilder_Component EngineerPlushie'], fac]
+        self.top_fac = maxim
+        print(maxim[1], maxim[0])
+        #pprint({fac.get_tag(): it for fac, it in factions_balance.items()})
+        #pprint(self.faction_balance)
+        #g = {}
+        #for name, value in faction_balance.items():
+        #    if 'MyObjectBuilder_Ingot' in name:
+        #        g[name] = value
+        #self.get_best_pl(g)
+        #return faction_balance
 
     def send_dump_to_server(self):
         entities = {
@@ -140,17 +160,29 @@ class WorldManager:
 
         gamesave_dict = {
             'world_id': self.sandbox.sector.find('WorldId').text,
-            'timestamp': self.sandbox.element_tree.create_time,
+            'save_date': str(datetime.datetime.fromtimestamp(int(self.sandbox.element_tree.create_time))).replace(' ', 'T') + '.28Z',
+            'session_name': self.sandbox.sector.find('SessionName').text,
             'entities': entities,
             'factions': [faction.to_json() for faction in Faction.get_factions(self.sandbox.sector)],
-            'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)]
+            'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)],
+            "ownership_log": "string",
+            "torch_log": "string",
+            "strong_log": "string"
+        }
+        # {'grids': [], 'characters': [], 'floating_objects': [], 'planets':[], 'safezones':[], 'voxel_maps':[], 'inventory_bags':[]}
+        gamesave_dictt = {
+            'world_id': self.sandbox.sector.find('WorldId').text,
+            'save_date': str(datetime.datetime.fromtimestamp(int(self.sandbox.element_tree.create_time))).replace(' ', 'T') + '.28Z',
+            'session_name': "",
+            'entities': {'grids': [], 'characters': [], 'floating_objects': [], 'planets':[], 'safezones':[], 'voxel_maps':[], 'inventory_bags':[]},
+            'factions': [faction.to_json() for faction in Faction.get_factions(self.sandbox.sector)],
+            'players': [],
+            "ownership_log": "string",
+            "torch_log": "string",
+            "strong_log": "string"
         }
 
-        print(sys.getsizeof(json.dumps(gamesave_dict)))
-
-        #pprint(gamesave_dict)
-        a = zlib.compress(json.dumps(gamesave_dict).encode())
-        print(sys.getsizeof(a))
+        self.gamesave_dict = gamesave_dict
 
     def test_manager_command(self):
         #self.get_faction_resourses()

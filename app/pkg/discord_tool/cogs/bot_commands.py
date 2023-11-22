@@ -28,6 +28,7 @@ class Text(commands.Cog):
                 server.turn_off()
                 await asyncio.sleep(10)
                 server.turn_on()
+                return
                 break
         await ctx.send('U dont chose this chanel on any server...')
 
@@ -39,6 +40,7 @@ class Text(commands.Cog):
                 restart_manager = RestartManager(server, send_sms=self.bot.msg_to_chanel)
                 await restart_manager.do_restart()
                 del restart_manager
+                return
                 break
         await ctx.send('U dont chose this chanel on any server...')
 

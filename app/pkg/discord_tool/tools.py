@@ -11,6 +11,8 @@ from app.pkg.restart_tools.tools import RestartManager
 from app.pkg.server_tools.tools import Server
 from app.pkg.ui_tools.popup import Window
 from app.pkg.discord_tool.cogs import bot_commands
+from app.pkg.network_tools.tools import ServerHerald
+from app.pkg.world_tools.tools import WorldManager
 
 
 class SEDiscordBot(commands.Bot):
@@ -23,14 +25,19 @@ class SEDiscordBot(commands.Bot):
         self.servers = servers
         self.mail_box = []
 
-    async def start_bot(self, tocken: str):
+    async def start_bot(self, config):
         # cogs
         await bot_commands.setup(self)
         # loops
-        asyncio.create_task(self.restart_loop())
-        asyncio.create_task(self.is_server_work_loop())
+        if config['DEFAULT']['observe_custom_restart']:
+            asyncio.create_task(self.restart_loop())
+        if config['DEFAULT']['observe_silent_crash']:
+            asyncio.create_task(self.is_server_work_loop())
+        if config['DEFAULT']['send_backups_to_server'] and config['DEFAULT']['api_key'] and False:
+            asyncio.create_task(self.snapshots_loop(config['DEFAULT']['api_key']))
 
-        await self.start(tocken, reconnect=True)
+        if config['DEFAULT']['discord_tocken']:
+            await self.start(config['DEFAULT']['discord_tocken'], reconnect=True)
 
     async def on_ready(self):
         #print('im ready.')
@@ -49,6 +56,19 @@ class SEDiscordBot(commands.Bot):
                         ui = Window(server)
                         asyncio.create_task(ui.ui())
             await asyncio.sleep(4*60)
+
+    async def snapshots_loop(self, api_key: str):
+        while True:
+            for server in self.servers:
+                last_save_on_server = await ServerHerald.get_last_save(server.world_id)
+                for save in server.get_backup_path_list():
+                    if datetime.datetime.fromtimestamp(os.path.getctime(save+'Sandbox.sbc')) > last_save_on_server:
+                        world_master = WorldManager(save, rw='r')
+                        world_master.execute_commands(commands=['send_dump_to_server'])
+                        await ServerHerald.send_save(world_master.gamesave_dict)
+                        del world_master
+                    await asyncio.sleep(0)
+            await asyncio.sleep(60*2)
 
     async def restart_loop(self):
         _last_hour = datetime.datetime.now().hour

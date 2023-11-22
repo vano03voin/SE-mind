@@ -56,7 +56,7 @@ class RestartManager:
         self.server.turn_off()
         try:
             self.world_manager.execute_commands(
-                [self.server.settings[pram] for pram in self.server.available_restart_prams if
+                [pram for pram in self.server.available_restart_prams if
                  self.server.settings[pram] != ''])
             del self.world_manager
         except:
