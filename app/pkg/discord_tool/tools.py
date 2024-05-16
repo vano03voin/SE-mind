@@ -67,7 +67,7 @@ class SEDiscordBot(commands.Bot):
                         world_master.execute_commands(commands=['send_dump_to_server'])
                         await ServerHerald.send_save(world_master.gamesave_dict)
                         del world_master
-                    await asyncio.sleep(0)
+                    await asyncio.sleep(10)
             await asyncio.sleep(60*2)
 
     async def restart_loop(self):

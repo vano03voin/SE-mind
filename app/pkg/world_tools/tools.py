@@ -152,9 +152,6 @@ class WorldManager:
             'grids': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is CubeGrid],
             'characters': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is Character],
             'floating_objects': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is FloatingObject],
-            'planets': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is Planet],
-            'safezones': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is SafeZone],
-            'voxel_maps': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is VoxelMap],
             'inventory_bags': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is InventoryBagEntity]
         }
 
@@ -164,23 +161,9 @@ class WorldManager:
             'session_name': self.sandbox.sector.find('SessionName').text,
             'entities': entities,
             'factions': [faction.to_json() for faction in Faction.get_factions(self.sandbox.sector)],
-            'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)],
-            "ownership_log": "string",
-            "torch_log": "string",
-            "strong_log": "string"
+            'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)]
         }
         # {'grids': [], 'characters': [], 'floating_objects': [], 'planets':[], 'safezones':[], 'voxel_maps':[], 'inventory_bags':[]}
-        gamesave_dictt = {
-            'world_id': self.sandbox.sector.find('WorldId').text,
-            'save_date': str(datetime.datetime.fromtimestamp(int(self.sandbox.element_tree.create_time))).replace(' ', 'T') + '.28Z',
-            'session_name': "",
-            'entities': {'grids': [], 'characters': [], 'floating_objects': [], 'planets':[], 'safezones':[], 'voxel_maps':[], 'inventory_bags':[]},
-            'factions': [faction.to_json() for faction in Faction.get_factions(self.sandbox.sector)],
-            'players': [],
-            "ownership_log": "string",
-            "torch_log": "string",
-            "strong_log": "string"
-        }
 
         self.gamesave_dict = gamesave_dict
 

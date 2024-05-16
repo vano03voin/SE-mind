@@ -186,7 +186,7 @@ class CubeGrid(Entity):
                      'is_static': self.get_static(),
                      'killable': self.get_killable(),
                      'owners': self.get_ownership(),
-                     'hydrogen': self.get_hydrogen()
+                     # 'hydrogen': self.get_hydrogen()
                      # 'blocks': blocks
                      }
         return grid_dict

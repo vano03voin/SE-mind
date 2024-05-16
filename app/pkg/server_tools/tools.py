@@ -1,10 +1,8 @@
-import asyncio
 import psutil
 import os
 from typing import List
 from pprint import pprint
-from datetime import datetime
-from app.pkg.xml_tools.tools import ElementTree
+from app.pkg.settings import Setting
 
 
 class Server:
@@ -14,19 +12,42 @@ class Server:
     savePath = 'Saves/'
     backupsPath = 'Backup/'
 
-    available_restart_prams = (
-        'fix_world',
-        'check_security'
-    )
+    discord_settings = (
+        Setting('use_discord_bridge', bool,
+                'This server have and use discord bridge plugin? (first setup discord bot)'),
+        Setting('log_chat_id', int,
+                'Loging chat id'),
+        Setting('commands_chat_id', int,
+                'Commands chat id'),
+        Setting('ingame_chat_id', int,
+                'Ingame chat id'))
+
+    restart_settings = (
+        Setting('use_custom_restart', bool,
+                'Turn on custom restarts, use only if u need our custom restart features(settings below)'),
+        Setting('delay_before_restart', int,
+                'Delay before restart in sekonds. default: 600'),
+        Setting('is_depatch_saving', bool,
+                'Do this server use depatch saving? DONT USE CUSTOM RESTART WHITH ENABLED DEPATCH SAVING'),
+        Setting('restart_times', str,
+                'When custom restart be in 24 format, here restart be in 02.00 and in 10.00. default: 2,10'))
+
+    restart_tasks_settings = (
+        Setting('fix_world', bool,
+                'fix green signals in world'),
+        Setting('check_security', bool,
+                'check infinity cargo in world'))
+
+    default_settings = {setting.name: '' for setting in (*discord_settings, *restart_settings, *restart_tasks_settings)}
+    available_restart_prams = (setting.name for setting in restart_tasks_settings)
 
     def __init__(self, r_path: str, settings):
         print(f'start monitoring server {r_path}')
         self.root_path = self.fix_path(r_path)
-        #get world id
-        world_file = ElementTree(self.get_save_path() + 'Sandbox.sbc')
-        sector = world_file.tree.getroot()
-        self.world_id = sector.find('WorldId').text
-        del world_file
+        # get world id
+        # world_file = ElementTree(self.get_save_path() + 'Sandbox.sbc')
+        # sector = world_file.tree.getroot()
+        # self.world_id = sector.find('WorldId').text
 
         self.settings = settings
         self.work_status = True
@@ -42,7 +63,7 @@ class Server:
             self.work_status = False
 
     def get_save_path(self, backups=False) -> str:
-        path = self.root_path+self.instancePath+self.savePath
+        path = self.root_path + self.instancePath + self.savePath
         files = [f.name for f in os.scandir(path) if f.is_dir()]
         world_path = files[0]
         for file in files:
@@ -52,7 +73,7 @@ class Server:
 
     def get_backup_path_list(self) -> List[str]:
         path = self.get_save_path(backups=True)
-        return [(path+f.name+'/') for f in os.scandir(path) if f.is_dir()]
+        return [(path + f.name + '/') for f in os.scandir(path) if f.is_dir()]
 
     def is_working(self):
         path = self.fix_path(self.root_path)

@@ -103,7 +103,7 @@ class Player:
             'last_deth_gps': self.get_death_xyz().get_like_list(),
             'get_connected': self.get_connected(),
             'admin': self.get_is_admin(),
-            'wildlife': self.get_is_wildlife(),
+            # 'wildlife': self.get_is_wildlife(),
             'balance': self.get_balance(),
             'gps_list': [gps.to_json() for gps in self.get_gps()]
         }
