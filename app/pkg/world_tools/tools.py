@@ -159,7 +159,12 @@ class WorldManager:
             'world_id': self.sandbox.sector.find('WorldId').text,
             'save_date': str(datetime.datetime.fromtimestamp(int(self.sandbox.element_tree.create_time))).replace(' ', 'T') + '.28Z',
             'session_name': self.sandbox.sector.find('SessionName').text,
-            'entities': entities,
+
+            'grids': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is CubeGrid],
+            'characters': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is Character],
+            'floating_objects': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is FloatingObject],
+            'inventory_bags': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is InventoryBagEntity],
+
             'factions': [faction.to_json() for faction in Faction.get_factions(self.sandbox.sector)],
             'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)]
         }

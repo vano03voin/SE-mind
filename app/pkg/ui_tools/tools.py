@@ -48,11 +48,9 @@ class MainWindow:
         event, values = self.window.read(timeout=100)
 
         # Setup snapshot sending
-        api_key = self.main_window_config['DEFAULT']['send_backups_to_server']
+        self.api_key = self.main_window_config['DEFAULT']['send_backups_to_server']
         send_backups_to_server = self.main_window_config['DEFAULT']['send_backups_to_server']
-        # if api_key and send_backups_to_server and False:
-        #asyncio.create_task(snapshots_loop(servers=self.servers, api_key=api_key))
-        snapshots_loop(servers=self.servers, api_key=api_key)
+
 
     def startup_servers(self):
         self.read_settings('servers.ini', self.servers_config)
@@ -82,6 +80,10 @@ class MainWindow:
             #[sg.Output(size=(66, 10))]]
 
     async def run_window(self):
+        # if api_key and send_backups_to_server and False:
+        # asyncio.create_task(snapshots_loop(servers=self.servers, api_key=api_key))
+        await snapshots_loop(servers=self.servers, api_key=self.api_key)
+
         while True:
             event, values = self.window.read(timeout=100)
 
