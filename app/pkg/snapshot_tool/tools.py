@@ -144,6 +144,7 @@ class GameSave(Base):
 
 
 DATABASE_URL = "postgresql+asyncpg://postgres:postgres@localhost/postgres"
+DATABASE_URL = "sqlite+aiosqlite:///./SQLite.db"
 
 from typing import AsyncGenerator
 
@@ -168,7 +169,8 @@ async_session_for_tests_maker = async_sessionmaker(bind=engine, class_=AsyncSess
 async def create_call_file(session: AsyncSession, data: GameSaveModel):
     call_file = GameSave(**data)
 
-    engine = create_engine("postgresql://postgres:postgres@localhost/postgres")
+    #engine = create_engine("postgresql://postgres:postgres@localhost/postgres")
+    engine = create_engine("sqlite+aiosqlite:///./SQLite.db")
     Base.metadata.create_all(engine)
     try:
         with Session(engine) as session:

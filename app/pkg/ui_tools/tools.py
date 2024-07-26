@@ -7,22 +7,24 @@ from typing import Set, Tuple
 from app.pkg.settings import Setting
 from app.pkg.server_tools.tools import Server
 from app.pkg.discord_tool.tools import SEDiscordBot
-from app.pkg.snapshot_tool.tools import snapshots_loop
+# from app.pkg.snapshot_tool.tools import snapshots_loop
 
 
 class MainWindow:
     """
-        Main window where u can see all servers and can interact with them.
+    Main window where u can see all servers and can interact with them. When he init, he init all other features like
+    server, observers and etc
     """
-    main_settings = (
+    main_settings = (  # Custom settings for custom project) Uses for constructing .ini file in future
         Setting('discord_tocken', str,
                 'Discord bot tocken. DOUBLE CHECK u give him all Privileged Gateway Intents'),
         Setting('observe_silent_crash', bool,
-                'Turn on server silent crash observing? (restart server to apply) (need wel setted discord bot above)'),
+                'Turn on "server silent crash" observing? (restart server to apply)(need correct and working discord '
+                'bot above)'),
         Setting('observe_custom_restart', bool,
-                'Let u use SE-mind server restart (need ds bot)'),
+                'Let you use SE-mind server restart (need working discord bot)'),
         Setting('send_backups_to_server', bool,
-                'Let u use SE-analitics for building graphs from ur world data'),
+                'Let u use SE-analitics.com for building graphs from ur world data'),
         Setting('api_key', bool,
                 'API key what u buy from vano03voin'))
     server_tool = ['Settings', 'Delete']
@@ -38,7 +40,7 @@ class MainWindow:
         self.default_main_setting = {pram.name: '' for pram in self.main_settings}
         self.main_window_config = configparser.ConfigParser(defaults=self.default_main_setting)
         self.read_settings('main_settings.ini', self.main_window_config)
-        self.save_settings('main_settings.ini', self.main_window_config)
+        self.save_settings('main_settings.ini', self.main_window_config)  # Create file if it not exists
 
         # Setup Discord
         self.startup_discord()
@@ -51,8 +53,10 @@ class MainWindow:
         self.api_key = self.main_window_config['DEFAULT']['send_backups_to_server']
         send_backups_to_server = self.main_window_config['DEFAULT']['send_backups_to_server']
 
-
     def startup_servers(self):
+        """
+        Reed settings of each server create instance of :class: Server and add it to monitoring list.
+        """
         self.read_settings('servers.ini', self.servers_config)
         for server_path in self.servers_config.sections():
             try:
@@ -82,7 +86,7 @@ class MainWindow:
     async def run_window(self):
         # if api_key and send_backups_to_server and False:
         # asyncio.create_task(snapshots_loop(servers=self.servers, api_key=api_key))
-        await snapshots_loop(servers=self.servers, api_key=self.api_key)
+        # await snapshots_loop(servers=self.servers, api_key=self.api_key)
 
         while True:
             event, values = self.window.read(timeout=100)
