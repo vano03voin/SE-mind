@@ -7,31 +7,51 @@ from pprint import pprint
 
 
 class ServerHerald:
-    SERVER_URL = 'http://localhost:8000/'
+    API_TOKEN = ''
+
+    SERVER_URL = 'http://127.0.0.1:8000/'
+    API_PREFIX = 'api/'
+    V_PREFIX = 'v1/'
 
     def __init__(self):
         pass
 
     @classmethod
-    async def get_last_save(cls, world_id: str) -> datetime.datetime:
-        server_link = cls.SERVER_URL + 'api/v2/get_last_save_time'
+    async def get_last_save(
+            cls,
+            server_exe_path: str
+    ) -> datetime.datetime:
+        path = 'game_save/get_last_game_save_time/'
+
+        print(cls._construct_link(path))
+        print(hash(server_exe_path))
 
         async with aiohttp.ClientSession() as session:
-            params = {'world_id': world_id}
-            async with session.get(server_link, params=params) as resp:
-                return datetime.datetime.fromtimestamp(float(await resp.text()))
+            # params = {'path': ''.join(server_exe_path.split('/')),
+            #           'token': cls.API_TOKEN}
+            params = {'path': 'string',
+                      'token': cls.API_TOKEN}
+
+            async with session.get(cls._construct_link(path), params=params) as resp:
+                return datetime.datetime.fromisoformat(str(await resp.text()).strip('"'))
 
     @classmethod
-    async def send_save(cls, save: dict) -> None:
-        server_link = cls.SERVER_URL + 'api/v2/save_world'
-        params = {'world_id': save.pop('world_id')}
-        gzip_save = gzip.compress(json.dumps(save).encode("utf-8"))
+    async def send_save(
+            cls,
+            save: dict,
+            server_exe_path: str
+    ) -> None:
+        path = 'game_save/'
+
+        params = {'path': server_exe_path,
+                  'token': cls.API_TOKEN}
+        params = {'path': 'string',
+                  'token': cls.API_TOKEN}
 
         async with aiohttp.ClientSession() as session:
-            response = await session.post(server_link, params=params, json=save)
-            print(await response.json())
+            response = await session.post(cls._construct_link(path), params=params, json=save)
             print(response)
 
-
-if __name__ == '__main__':
-    asyncio.get_event_loop().run_until_complete(ServerHerald.get_last_save('1'))
+    @classmethod
+    def _construct_link(cls, path):
+        return cls.SERVER_URL + cls.API_PREFIX + cls.V_PREFIX + path

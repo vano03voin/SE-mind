@@ -33,7 +33,7 @@ class SEDiscordBot(commands.Bot):
             asyncio.create_task(self.restart_loop())
         if config['DEFAULT']['observe_silent_crash']:
             asyncio.create_task(self.is_server_work_loop())
-        if config['DEFAULT']['send_backups_to_server'] and config['DEFAULT']['api_key'] and False:
+        if config['DEFAULT']['send_backups_to_server'] and config['DEFAULT']['api_key'] or True:
             asyncio.create_task(self.snapshots_loop(config['DEFAULT']['api_key']))
 
         if config['DEFAULT']['discord_tocken']:

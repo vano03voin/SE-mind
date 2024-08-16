@@ -7,7 +7,8 @@ from typing import Set, Tuple
 from app.pkg.settings import Setting
 from app.pkg.server_tools.tools import Server
 from app.pkg.discord_tool.tools import SEDiscordBot
-# from app.pkg.snapshot_tool.tools import snapshots_loop
+from app.pkg.snapshot_tool.tools import snapshots_loop
+from pkg.network_tools.tools import ServerHerald
 
 
 class MainWindow:
@@ -25,7 +26,7 @@ class MainWindow:
                 'Let you use SE-mind server restart (need working discord bot)'),
         Setting('send_backups_to_server', bool,
                 'Let u use SE-analitics.com for building graphs from ur world data'),
-        Setting('api_key', bool,
+        Setting('api_key', str,
                 'API key what u buy from vano03voin'))
     server_tool = ['Settings', 'Delete']
 
@@ -50,7 +51,7 @@ class MainWindow:
         event, values = self.window.read(timeout=100)
 
         # Setup snapshot sending
-        self.api_key = self.main_window_config['DEFAULT']['send_backups_to_server']
+        self.api_key = self.main_window_config['DEFAULT']['api_key']
         send_backups_to_server = self.main_window_config['DEFAULT']['send_backups_to_server']
 
     def startup_servers(self):
@@ -84,9 +85,9 @@ class MainWindow:
             #[sg.Output(size=(66, 10))]]
 
     async def run_window(self):
-        # if api_key and send_backups_to_server and False:
-        # asyncio.create_task(snapshots_loop(servers=self.servers, api_key=api_key))
-        # await snapshots_loop(servers=self.servers, api_key=self.api_key)
+        # if self.api_key and send_backups_to_server and False:
+        #    asyncio.create_task(snapshots_loop(servers=self.servers, api_key=self.api_key))
+        await snapshots_loop(servers=self.servers, api_key=self.api_key)
 
         while True:
             event, values = self.window.read(timeout=100)

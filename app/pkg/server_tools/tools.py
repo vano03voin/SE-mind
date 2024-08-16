@@ -1,6 +1,7 @@
 import psutil
 import os
 from typing import List
+from copy import deepcopy
 from pprint import pprint
 from app.pkg.settings import Setting
 
@@ -11,6 +12,10 @@ class Server:
     instancePath = 'Instance/'
     savePath = 'Saves/'
     backupsPath = 'Backup/'
+
+    base_settings = (
+        Setting('send_server_saves_to_server', bool,
+                'If u set in main settings correct api_tocken, saves will send on server to analis'),)
 
     discord_settings = (
         Setting('use_discord_bridge', bool,
@@ -38,8 +43,9 @@ class Server:
         Setting('check_security', bool,
                 'check infinity cargo in world'))
 
-    default_settings = {setting.name: '' for setting in (*discord_settings, *restart_settings, *restart_tasks_settings)}
+    default_settings = {setting.name: '' for setting in (*base_settings, *discord_settings, *restart_settings, *restart_tasks_settings)}
     available_restart_prams = (setting.name for setting in restart_tasks_settings)
+    test_default_and_restart_settings = deepcopy(default_settings) | {pram: '' for pram in available_restart_prams}
 
     def __init__(self, r_path: str, settings):
         print(f'start monitoring server {r_path}')
@@ -49,7 +55,7 @@ class Server:
         # sector = world_file.tree.getroot()
         # self.world_id = sector.find('WorldId').text
 
-        self.settings = settings
+        self.settings = deepcopy(settings)
         self.work_status = True
 
     def turn_on(self):
@@ -92,7 +98,7 @@ class Server:
         return False
 
     def __eq__(self, other):
-        if type(other) == Server:
+        if type(other) is Server:
             return self.root_path == other.root_path
 
     def __hash__(self):
