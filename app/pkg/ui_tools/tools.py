@@ -8,7 +8,6 @@ from app.pkg.settings import Setting
 from app.pkg.server_tools.tools import Server
 from app.pkg.discord_tool.tools import SEDiscordBot
 from app.pkg.snapshot_tool.tools import snapshots_loop
-from pkg.network_tools.tools import ServerHerald
 
 
 class MainWindow:
@@ -87,7 +86,7 @@ class MainWindow:
     async def run_window(self):
         # if self.api_key and send_backups_to_server and False:
         #    asyncio.create_task(snapshots_loop(servers=self.servers, api_key=self.api_key))
-        await snapshots_loop(servers=self.servers, api_key=self.api_key)
+        await snapshots_loop(servers=self.servers, api_key=self.api_key, discord_bot=self.discord_bot)
 
         while True:
             event, values = self.window.read(timeout=100)

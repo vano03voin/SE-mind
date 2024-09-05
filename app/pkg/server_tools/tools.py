@@ -14,12 +14,16 @@ class Server:
     backupsPath = 'Backup/'
 
     base_settings = (
+        Setting('server_name', str,
+                'Alias for understending who is who. Format: test_server'),
         Setting('send_server_saves_to_server', bool,
                 'If u set in main settings correct api_tocken, saves will send on server to analis'),)
 
     discord_settings = (
         Setting('use_discord_bridge', bool,
                 'This server have and use discord bridge plugin? (first setup discord bot)'),
+        Setting('stat_chat_id', int,
+                'Private admin chat where we will publish stat of server'),
         Setting('log_chat_id', int,
                 'Loging chat id'),
         Setting('commands_chat_id', int,

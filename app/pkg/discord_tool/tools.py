@@ -11,7 +11,6 @@ from app.pkg.restart_tools.tools import RestartManager
 from app.pkg.server_tools.tools import Server
 from app.pkg.ui_tools.popup import Window
 from app.pkg.discord_tool.cogs import bot_commands
-from app.pkg.network_tools.tools import ServerHerald
 from app.pkg.world_tools.tools import WorldManager
 
 
@@ -33,8 +32,8 @@ class SEDiscordBot(commands.Bot):
             asyncio.create_task(self.restart_loop())
         if config['DEFAULT']['observe_silent_crash']:
             asyncio.create_task(self.is_server_work_loop())
-        if config['DEFAULT']['send_backups_to_server'] and config['DEFAULT']['api_key'] or True:
-            asyncio.create_task(self.snapshots_loop(config['DEFAULT']['api_key']))
+        # if config['DEFAULT']['send_backups_to_server'] and config['DEFAULT']['api_key'] and False:
+        #     asyncio.create_task(self.snapshots_loop(config['DEFAULT']['api_key']))
 
         if config['DEFAULT']['discord_tocken']:
             await self.start(config['DEFAULT']['discord_tocken'], reconnect=True)
@@ -89,3 +88,15 @@ class SEDiscordBot(commands.Bot):
         my_channel = self.get_channel(int(where))
         for msg in what:
             await my_channel.send(msg[:1995])
+
+    async def update_inform_msg(self, msg_theme: str, msg: str, server: Server):
+        return
+        msg_prefix = f'**[{server.settings["server_name"].upper()}:{msg_theme}]**'
+        msg = msg_prefix+'\n'+msg.replace("*","").replace('_', '').replace("'","")
+        msg = msg[:1999]
+
+        chanel = self.get_channel(int(server.settings['stat_chat_id']))
+        async for message in chanel.history(limit=30):
+            if msg_prefix in message.content:
+                return await message.edit(content=msg)
+        await chanel.send(msg)

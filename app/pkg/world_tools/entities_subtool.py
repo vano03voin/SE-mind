@@ -198,7 +198,8 @@ class InventoryItem:
         i_type = xml_source.find('PhysicalContent').get('{http://www.w3.org/2001/XMLSchema-instance}type')
         i_subtype = xml_source.find('PhysicalContent').find('SubtypeName').text
         amount = int(float(xml_source.find('Amount').text))
-        name = f'{i_type} {i_subtype}'
+        # name = f'{i_type} {i_subtype}'
+        name = f'{i_type[16:]} {i_subtype}'
         return {name: amount}
 
     @classmethod
