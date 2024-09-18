@@ -21,9 +21,6 @@ class ServerHerald:
     API_PREFIX = 'api/'
     V_PREFIX = 'v1/'
 
-    def __init__(self):
-        pass
-
     @classmethod
     async def get_last_save(
             cls,
