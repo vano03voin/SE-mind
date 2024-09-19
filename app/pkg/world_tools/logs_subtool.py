@@ -17,6 +17,7 @@ class OwnershipLog:
         if True:
             final = []
             #for line in file.readlines():
+            return True
             for line in logs:
                 log_time = line[:8].split(':')
                 time = datetime(year=date.year, month=date.month, day=date.day, hour=int(log_time[0]), minute=int(log_time[1]), second=int(log_time[2]))

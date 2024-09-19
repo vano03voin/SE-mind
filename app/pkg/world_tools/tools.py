@@ -12,7 +12,7 @@ import gzip
 from app.pkg.xml_tools.tools import ElementTree
 from app.pkg.world_tools.entities_subtool import *
 from app.pkg.world_tools.players_subtool import *
-from pkg.world_tools.logs_subtool import OwnershipLog
+from app.pkg.world_tools.logs_subtool import OwnershipLog
 
 
 class WorldManager:

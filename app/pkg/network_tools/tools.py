@@ -53,9 +53,8 @@ class ServerHerald:
             response = await session.post(cls._construct_link(path), params=params, json=save)
 
             if response.status == 201:
+                print('сейв отправлен успешно')
                 response_data = await response.json()
-                await cls.DISCORD_BOT.update_inform_msg('top_by_resources', response_data['top_by_resources'], server)
-                await cls.DISCORD_BOT.update_inform_msg('dif_by_last_save', response_data['dif_by_last_save'], server)
             elif response.status == 500:
                 print(response)
 

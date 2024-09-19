@@ -16,6 +16,8 @@ class Server:
     base_settings = (
         Setting('server_name', str,
                 'Alias for understending who is who. Format: test_server'),
+        Setting('custom_absolute_instance_path', str,
+                'if ur server use custom instance path, write it here. Left empty if u dont change default path'),
         Setting('send_server_saves_to_server', bool,
                 'If u set in main settings correct api_tocken, saves will send on server to analis'),)
 
@@ -73,7 +75,10 @@ class Server:
             self.work_status = False
 
     def get_save_path(self, backups=False) -> str:
-        path = self.root_path + self.instancePath + self.savePath
+        if self.settings['custom_absolute_instance_path'] == '':
+            path = self.root_path + self.instancePath + self.savePath
+        else:
+            path = self.fix_path(self.settings['custom_absolute_instance_path'])+self.savePath
         files = [f.name for f in os.scandir(path) if f.is_dir()]
         world_path = files[0]
         for file in files:
