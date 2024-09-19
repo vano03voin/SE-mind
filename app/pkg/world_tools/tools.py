@@ -12,6 +12,7 @@ import gzip
 from app.pkg.xml_tools.tools import ElementTree
 from app.pkg.world_tools.entities_subtool import *
 from app.pkg.world_tools.players_subtool import *
+from pkg.world_tools.logs_subtool import OwnershipLog
 
 
 class WorldManager:
@@ -148,12 +149,13 @@ class WorldManager:
         #return faction_balance
 
     def send_dump_to_server(self):
-        entities = {
-            'grids': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is CubeGrid],
-            'characters': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is Character],
-            'floating_objects': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is FloatingObject],
-            'inventory_bags': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is InventoryBagEntity]
-        }
+        # entities = {
+        #     'grids': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is CubeGrid],
+        #     'characters': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is Character],
+        #     'floating_objects': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is FloatingObject],
+        #     'inventory_bags': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is InventoryBagEntity]
+        # }
+        save_date = datetime.datetime.fromtimestamp(int(self.sandbox.element_tree.create_time))
 
         gamesave_dict = {
             # 'world_id': self.sandbox.sector.find('WorldId').text,
@@ -166,7 +168,9 @@ class WorldManager:
             'inventory_bags': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is InventoryBagEntity],
 
             'factions': [faction.to_json() for faction in Faction.get_factions(self.sandbox.sector)],
-            'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)]
+            'players': [player.to_json() for player in Player.get_players(self.sandbox.sector)],
+
+            'ownership_log': OwnershipLog.get_json_for_sending(save_date, self.path, int(self.sandbox.sector.find("Settings/AutoSaveInMinutes").text))
         }
         # {'grids': [], 'characters': [], 'floating_objects': [], 'planets':[], 'safezones':[], 'voxel_maps':[], 'inventory_bags':[]}
 

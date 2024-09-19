@@ -1,9 +1,6 @@
 import asyncio
 import datetime
 import aiohttp
-import json
-import gzip
-from pprint import pprint
 
 from app.pkg.server_tools.tools import Server
 from app.pkg.discord_tool.tools import SEDiscordBot
