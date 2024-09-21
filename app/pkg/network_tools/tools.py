@@ -46,7 +46,7 @@ class ServerHerald:
     ) -> None:
         path = 'game_save/'
 
-        params = {'name': server.settings['server_name'],
+        params = {'game_server_name': server.settings['server_name'],
                   'token': cls.API_TOKEN}
 
         async with (aiohttp.ClientSession() as session):
@@ -68,7 +68,7 @@ class ServerHerald:
         params = {'token': cls.API_TOKEN}
 
         async with aiohttp.ClientSession() as session:
-            response = await session.post(cls._construct_link(path), params=params, json={'name': server_name})
+            await session.post(cls._construct_link(path), params=params, json={'name': server_name})
 
     @classmethod
     def _construct_link(cls, path):

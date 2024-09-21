@@ -13,8 +13,6 @@ from app.pkg.world_tools.tools import WorldManager
 
 from datetime import datetime
 
-a: datetime
-a.timestamp()
 
 async def snapshots_loop(servers: Set[Server], api_key: str, discord_bot):
     ServerHerald.API_TOKEN = api_key
@@ -28,6 +26,7 @@ async def snapshots_loop(servers: Set[Server], api_key: str, discord_bot):
                     except GameServerNotFoundError:
                         await ServerHerald.create_game_server(server.settings['server_name'])
                         last_save_on_server = await ServerHerald.get_last_save(server.settings['server_name'])
+                    print('awd', server.get_backup_path_list())
                     for save in server.get_backup_path_list():
                         # print(datetime.fromtimestamp(os.path.getctime(save + 'Sandbox.sbc')))
                         # if datetime.fromtimestamp(os.path.getctime(save + 'Sandbox.sbc')) > last_save_on_server:
