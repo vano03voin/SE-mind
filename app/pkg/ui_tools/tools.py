@@ -1,13 +1,16 @@
+import sys
+
 import PySimpleGUI as sg
 import configparser
 import asyncio
 
 from typing import Set, Tuple
 
+from loguru import logger
+
 from app.pkg.settings import Setting
 from app.pkg.server_tools.tools import Server
 from app.pkg.discord_tool.tools import SEDiscordBot
-from app.pkg.snapshot_tool.tools import snapshots_loop
 
 
 class MainWindow:
@@ -46,7 +49,9 @@ class MainWindow:
         self.startup_discord()
 
         self.window = sg.Window('SE-Mind monitoring', self.construct_main_window(), enable_close_attempted_event=True)
-
+        self.window.finalize()
+        sys.stdout = self.window["-OUTPUT-"]
+        sys.stderr = self.window["-OUTPUT-"]
         event, values = self.window.read(timeout=100)
 
         # Setup snapshot sending
@@ -62,7 +67,7 @@ class MainWindow:
             try:
                 self.servers.add(Server(server_path, self.servers_config[server_path]))
             except FileNotFoundError:
-                print(f"Server from {self.servers_config[server_path]} not exist")
+                logger.warning(f"Server from {self.servers_config[server_path]} not exist")
 
     def startup_discord(self):
         if self.main_window_config['DEFAULT']['discord_tocken'] != '':
@@ -79,15 +84,12 @@ class MainWindow:
             [sg.Column(layout=[[sg.Text('Main settings', size=size), sg.Text('', size=size), sg.Button('App settings')],
                                [sg.Text('Server', size=size), sg.Text('Status', size=size),
                                 sg.Button('Add new exe of server')],
-                               *[self.construct_server_row(server, size) for server in self.servers]], key='-servers')],
-            ]
-            #[sg.Output(size=(66, 10))]]
+                               *[self.construct_server_row(server, size) for server in self.servers]], key='-servers'),],
+            [
+             sg.Column(layout=[[sg.Output(size=(82, 10), key="-OUTPUT-")]])
+             ]]
 
     async def run_window(self):
-        # if self.api_key and send_backups_to_server and False:
-        #    asyncio.create_task(snapshots_loop(servers=self.servers, api_key=self.api_key))
-        await snapshots_loop(servers=self.servers, api_key=self.api_key, discord_bot=self.discord_bot)
-
         while True:
             event, values = self.window.read(timeout=100)
 

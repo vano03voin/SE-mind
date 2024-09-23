@@ -1,3 +1,4 @@
+import logging
 import sys
 import xml.etree.ElementTree as ET
 from pprint import pprint
@@ -8,6 +9,8 @@ import pickle
 import time
 import zlib
 import gzip
+
+from loguru import logger
 
 from app.pkg.xml_tools.tools import ElementTree
 from app.pkg.world_tools.entities_subtool import *
@@ -22,27 +25,23 @@ class WorldManager:
     SANDBOX_path = 'SANDBOX_0_0_0_.sbs'
 
     def __init__(self, folder_path: str, rw='r'):
-        print(f'init world edit {folder_path}')
+        logger.debug('Запуск обработчика сохранения {}', folder_path)
         self.path = folder_path
         self.rw = rw
 
     def execute_commands(self, commands: list[str]):
-        #reed save
+        # Reed save
         start_time = time.time()
         self.sandbox = SandboxWorker(self.path + self.Sandbox_path)
         self.SANDBOX = SANDBOXWorker(self.path + self.SANDBOX_path)
-        print(f'reed save take {time.time() - start_time}')
+        logger.debug('Reed save take {}', time.time() - start_time)
         start_time = time.time()
 
-        #edit save
+        # Edit save
         self.id_trade = self.sandbox.id_trade + self.SANDBOX.id_trade
 
         for command in commands:
             match command:
-                case 'get_grid_names':
-                    self.get_grid_names()
-                case 'get_inventory':
-                    self.get_inventory()
                 case 'fix_world':
                     self.fix_world()
                 case 'update_trade':
@@ -58,43 +57,16 @@ class WorldManager:
                     self.get_faction_resourses()
                 case 'get_factions_stations_gps':
                     pprint(Faction.get_factions_stations_gps(self.sandbox.sector))
-                case 'dump_data':
-                    self.dump_data()
                 case _:
-                    print(f'команды {command} не существует')
+                    logger.debug('Команды {} не существует', command)
 
-        print(f'commands take {time.time() - start_time}')
+        logger.debug('Commands on save take {}', time.time() - start_time)
+
         # PART WHEN WE SAVE CHANGES
         if self.rw == 'w':
             start_time = time.time()
             self.save_changes()
-            print(f'save world take {time.time() - start_time}')
-
-    def dump_data(self):
-        data_to_send = self
-        print(1)
-
-    def get_grid_names(self):
-        """Return custom grids names"""
-        for grid in self.SANDBOX.get_grids():
-            if 'Grid' not in i.name:
-                print(i.name)
-
-    def get_inventory(self):
-        """I use to check where wealth flow to another person"""
-        #for entiti in self.SANDBOX.ENTITIES:
-        s_time = time.time()
-        keys = {}
-        for grid in self.SANDBOX.get_grids():
-            for block in grid.get_blocks():
-                if block.get_builder_id() == '144115188075867343' or block.get_builder_id() == '144115188075857675':
-                    for name, amount in block.get_inventory().items():
-                        if 'Uranium' in name:
-                            keys.setdefault(block.get_builder_id(), {})
-                            keys[block.get_builder_id()].setdefault(name, 0)
-                            keys[block.get_builder_id()][name] += amount
-        pprint(keys)
-        print(f'get inventory take {time.time() - s_time}s')
+            logger.debug('Save world changes take {}', time.time() - start_time)
 
     def fix_world(self):
         """Fixing most common but noise things"""
@@ -107,7 +79,7 @@ class WorldManager:
                 self.id_trade += grid.update_store(self.id_trade)
 
     def check_security(self):
-        """Check who or what play ower ur server laws"""
+        """Check who or what play over ur server laws"""
         self.SANDBOX.check_volume(self.sandbox.id_name)
 
     def save_changes(self):
@@ -117,20 +89,15 @@ class WorldManager:
         ElementTree.remove_file(self.path + 'SANDBOX_0_0_0_.sbsB5')
 
     def get_faction_resourses(self):
-        members = []
         factions_balance = {}
         for faction in Faction.get_factions(self.sandbox.sector):
             factions_balance[faction] = {}
-            #if faction.get_tag() == 'OIS':
-            #    members = [memb.get_id() for memb in faction.get_members()]
 
         for grid in self.SANDBOX.get_grids():
             for p_id, p_inv in grid.get_inventory_and_owners().items():
                 for tag, inv in factions_balance.items():
                     if p_id in [member.get_id() for member in tag.get_members()]:
-                        #if p_id in members:
                         InventoryItem.merge_inv(inv, p_inv)
-        #pprint(faction_balance)
         self.faction_balance = {fac.get_tag(): it for fac, it in factions_balance.items()}
 
         maxim = [0, 0]
@@ -138,23 +105,8 @@ class WorldManager:
             if inv.get('MyObjectBuilder_Component EngineerPlushie', 0) > maxim[0]:
                 maxim=[inv['MyObjectBuilder_Component EngineerPlushie'], fac]
         self.top_fac = maxim
-        print(maxim[1], maxim[0])
-        #pprint({fac.get_tag(): it for fac, it in factions_balance.items()})
-        #pprint(self.faction_balance)
-        #g = {}
-        #for name, value in faction_balance.items():
-        #    if 'MyObjectBuilder_Ingot' in name:
-        #        g[name] = value
-        #self.get_best_pl(g)
-        #return faction_balance
 
     def send_dump_to_server(self):
-        # entities = {
-        #     'grids': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is CubeGrid],
-        #     'characters': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is Character],
-        #     'floating_objects': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is FloatingObject],
-        #     'inventory_bags': [ent.to_json() for ent in self.SANDBOX.ENTITIES if type(ent) is InventoryBagEntity]
-        # }
         save_date = datetime.datetime.fromtimestamp(int(self.sandbox.element_tree.create_time))
 
         gamesave_dict = {
@@ -172,7 +124,6 @@ class WorldManager:
 
             'ownership_log': OwnershipLog.get_json_for_sending(save_date, self.path, int(self.sandbox.sector.find("Settings/AutoSaveInMinutes").text))
         }
-        # {'grids': [], 'characters': [], 'floating_objects': [], 'planets':[], 'safezones':[], 'voxel_maps':[], 'inventory_bags':[]}
 
         self.gamesave_dict = gamesave_dict
 

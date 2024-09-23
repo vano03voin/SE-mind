@@ -17,7 +17,7 @@ class OwnershipLog:
         if True:
             final = []
             #for line in file.readlines():
-            return True
+            return (None, )
             for line in logs:
                 log_time = line[:8].split(':')
                 time = datetime(year=date.year, month=date.month, day=date.day, hour=int(log_time[0]), minute=int(log_time[1]), second=int(log_time[2]))
@@ -53,5 +53,5 @@ class OwnershipLog:
         return final
 
     # Пример использования
-print(OwnershipLog.get_json_for_sending(datetime.now().replace(hour=2, minute=5), r'C:\Users\lena0\OneDrive\Рабочий стол\ownerships-2023-05-21.log', 15))
+#print(OwnershipLog.get_json_for_sending(datetime.now().replace(hour=2, minute=5), r'C:\Users\lena0\OneDrive\Рабочий стол\ownerships-2023-05-21.log', 15))
 

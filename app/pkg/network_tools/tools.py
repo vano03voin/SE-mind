@@ -1,6 +1,8 @@
+"""Модуль работы с сетью (SE-mind-Server)"""
 import asyncio
 import datetime
 import aiohttp
+from loguru import logger
 
 from app.pkg.server_tools.tools import Server
 from app.pkg.discord_tool.tools import SEDiscordBot
@@ -22,21 +24,19 @@ class ServerHerald:
     async def get_last_save(
             cls,
             server_name: str
-    ) -> datetime.datetime:
+    ) -> datetime.datetime | None:
         path = 'game_save/get_last_game_save_time/'
 
         async with aiohttp.ClientSession() as session:
-            # params = {'path': ''.join(server_exe_path.split('/')),
-            #           'token': cls.API_TOKEN}
-            params = {'name': server_name,
+            params = {'game_server_name': server_name,
                       'token': cls.API_TOKEN}
 
             async with session.get(cls._construct_link(path), params=params) as resp:
                 if resp.status == 404:
-                    raise GameServerNotFoundError
-                print(await resp.text())
-                print(resp.status)
-                return datetime.datetime.fromisoformat(str(await resp.text()).strip('"'))
+                    return
+                save_time = datetime.datetime.fromisoformat(str(await resp.text()).strip('"'))
+                logger.debug('Время последнего сохранение на сервере: {}', await resp.text())
+                return save_time
 
     @classmethod
     async def send_save(
@@ -53,10 +53,11 @@ class ServerHerald:
             response = await session.post(cls._construct_link(path), params=params, json=save)
 
             if response.status == 201:
-                print('сейв отправлен успешно')
-                response_data = await response.json()
-            elif response.status == 500:
-                print(response)
+                logger.debug('Cейв отправлен успешно')
+            elif response.status == 500 or response.status == 409:
+                logger.debug('Случайно отправил старый сейв, {} {}', server.settings['server_name'], await response.text())
+            else:
+                logger.error('Ошибка отправки сейва {} {}', server.settings['server_name'], response)
 
     @classmethod
     async def create_game_server(

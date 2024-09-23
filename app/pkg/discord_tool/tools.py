@@ -20,7 +20,7 @@ class SEDiscordBot(commands.Bot):
 
     def __init__(self, servers: Set[Server]):
         super().__init__(command_prefix="$", intents=discord.Intents.all())
-        discord.utils.setup_logging()
+        #discord.utils.setup_logging()
         self.servers = servers
         self.mail_box = []
 

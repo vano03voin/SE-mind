@@ -1,4 +1,7 @@
-discord~=2.3.1
-PySimpleGUI==4.60.5
-psutil~=5.9.5
-aiohttp~=3.9.2
+discord
+PySimpleGUI
+psutil
+aiohttp
+pytest
+loguru
+requests

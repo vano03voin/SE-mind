@@ -1,8 +1,13 @@
+import logging
+
 import psutil
 import os
 from typing import List
 from copy import deepcopy
 from pprint import pprint
+
+from loguru import logger
+
 from app.pkg.settings import Setting
 
 
@@ -54,12 +59,8 @@ class Server:
     test_default_and_restart_settings = deepcopy(default_settings) | {pram: '' for pram in available_restart_prams}
 
     def __init__(self, r_path: str, settings):
-        print(f'start monitoring server {r_path}')
+        logger.debug('Start monitoring server {}', r_path)
         self.root_path = self.fix_path(r_path)
-        # get world id
-        # world_file = ElementTree(self.get_save_path() + 'Sandbox.sbc')
-        # sector = world_file.tree.getroot()
-        # self.world_id = sector.find('WorldId').text
 
         self.settings = deepcopy(settings)
         self.work_status = True
@@ -115,7 +116,8 @@ class Server:
 
     @classmethod
     def fix_path(cls, path_to_fix):
-        path_to_fix.replace('\\', '/')
+        path_to_fix.replace(r'\\\\', "/")
+        path_to_fix.replace(r'\\', '/')
         path_to_fix.replace('//', '/')
         return path_to_fix if path_to_fix[-1] == '/' else path_to_fix + '/'
 

@@ -5,6 +5,7 @@ import os
 from typing import Set
 
 from aiohttp import ClientConnectorError
+from loguru import logger
 
 from app.pkg.server_tools.tools import Server
 from app.pkg.network_tools.tools import ServerHerald, GameServerNotFoundError
@@ -14,23 +15,20 @@ from app.pkg.world_tools.tools import WorldManager
 from datetime import datetime
 
 
-async def snapshots_loop(servers: Set[Server], api_key: str, discord_bot):
+async def snapshots_loop(servers: Set[Server], api_key: str):
     ServerHerald.API_TOKEN = api_key
-    ServerHerald.DISCORD_BOT = discord_bot
     while True:
         for server in servers:
             if server.settings['send_server_saves_to_server']:
                 try:
-                    try:
-                        last_save_on_server = await ServerHerald.get_last_save(server.settings['server_name'])
-                    except GameServerNotFoundError:
+                    last_save_on_server = await ServerHerald.get_last_save(server.settings['server_name'])
+                    if not last_save_on_server:
+                        logger.debug('Сервера с именем {} не существует, создаю его', server.settings['server_name'])
                         await ServerHerald.create_game_server(server.settings['server_name'])
                         last_save_on_server = await ServerHerald.get_last_save(server.settings['server_name'])
-                    print('awd', server.get_backup_path_list())
+
                     for save in server.get_backup_path_list():
-                        # print(datetime.fromtimestamp(os.path.getctime(save + 'Sandbox.sbc')))
-                        # if datetime.fromtimestamp(os.path.getctime(save + 'Sandbox.sbc')) > last_save_on_server:
-                        print(save + 'Sandbox.sbc')
+                        save = Server.fix_path(save)
                         if datetime.fromtimestamp(os.path.getctime(save + 'Sandbox.sbc')) > datetime.fromtimestamp(last_save_on_server.timestamp()):
                             world_master = WorldManager(save, rw='r')
                             world_master.execute_commands(commands=['send_dump_to_server'])
@@ -38,7 +36,7 @@ async def snapshots_loop(servers: Set[Server], api_key: str, discord_bot):
                             del world_master
                         await asyncio.sleep(0)
                 except ClientConnectorError:
-                    print('сервер вано для сейвов упал. Попробую подключиться позже.')
-                except GameServerNotFoundError:
-                    await ServerHerald.create_game_server(server.settings['server_name'])
+                    logger.debug('Cервер для обработки сейвов лежит. Попробую подключиться позже.')
+                except Exception as ex:
+                    logger.exception(ex)
         await asyncio.sleep(60 * 2)
